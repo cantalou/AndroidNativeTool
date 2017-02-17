@@ -1,16 +1,13 @@
-#include <jni.h>
+#include "../CommonHeader.h"
 
-/**
- * 调用静态函数
- */
-jobject invoke_static(JNIEnv *env, jclass jclazz, jstring method_name, jstring sign);
+jmethodID findMethod(JNIEnv *env, jobjectArray methods, const char *name);
 
-/**
- * 调用静态函数
- */
-jobject invoke(JNIEnv *env, jobject obj, const char *name, const char *sign, ...);
+jmethodID getMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic);
 
-/**
- * 调用实例函数
- */
-jobject invoke_virtual(JNIEnv *env, jobject obj, jstring method_name, jstring sign);
+jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic, jboolean isVoid, ...);
+
+jobject invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isVoid, jboolean isStatic, ...);
+
+jobject invokeMethodV(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isStatic, jboolean isVoid, va_list args);
+
+

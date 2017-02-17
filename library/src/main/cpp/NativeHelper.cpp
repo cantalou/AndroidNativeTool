@@ -1,20 +1,25 @@
 #include <jni.h>
+#include <string.h>
 #include <string>
 #include "util/InvokeHelp.h"
 #include "util/MD5.h"
+#include "util/Log.h"
 
-#define  TAG    "InvokeHelp"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,TAG,__VA_ARGS__)
 
 extern "C"
 
 JNIEXPORT jobject JNICALL
-Java_com_cantalou_android_nativeutil_NativeHelper_test(JNIEnv *env, jclass jclazz, jobject obj, jstring name_, jstring sign_) {
+Java_com_cantalou_android_nativeutil_NativeHelper_test(JNIEnv *env, jclass jclazz, jobject obj, jstring name_, jstring sign_, jboolean isStatic,
+                                                       jboolean isVoid, jstring value) {
+
+    LOGI("log %s", "1");
+    log(env,"log ");
+    LOGI("log %s", "3");
+
     const char *sign = sign_ != NULL ? env->GetStringUTFChars(sign_, 0) : NULL;
-    jobject result = invoke(env, obj, env->GetStringUTFChars(name_, 0), sign);
+    jobject result = invokeMethod(env, obj, env->GetStringUTFChars(name_, 0), sign, isStatic, isVoid, value);
     return result;
 }
-
 
 /**
  * 生成MD5摘要
@@ -41,4 +46,3 @@ Java_com_cantalou_android_nativeutil_NativeHelper_MD5(JNIEnv *env, jclass jclazz
     }
     return env->NewStringUTF(destination);
 }
-

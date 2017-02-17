@@ -15,5 +15,5 @@ public class NativeHelper {
      */
     public static native String MD5(String content);
 
-    public static native Object test(Object obj, String name, String sign);
+    public static native Object test(Object obj, String name, String sign, boolean isStatic, boolean isVoid, String value);
 }
