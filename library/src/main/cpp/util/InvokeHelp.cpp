@@ -1,11 +1,5 @@
-#include <string.h>
-#include <jni.h>
 #include "InvokeHelp.h"
 #include "Log.h"
-
-#define LOG true
-#define TAG "InvokeHelp"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,TAG,__VA_ARGS__)
 
 /**
  * 判断字符串是否相等
@@ -24,7 +18,7 @@ jboolean stringEquals(JNIEnv *env, jstring str1, const char *str2) {
     return result;
 }
 
-jmethodID getMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic) {
+jmethodID findMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic) {
     jmethodID result = NULL;
     if (sign != NULL && strlen(sign) > 0) {
         if (isStatic) {
@@ -65,11 +59,16 @@ jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sig
     jobject result = NULL;
     va_list args;
     va_start(args, isVoid);
-    jmethodID methodID = getMethod(env, obj, name, sign, isStatic);
+    jmethodID methodID = findMethod(env, obj, name, sign, isStatic);
     if (methodID != NULL) {
         result = invokeMethodV(env, obj, methodID, isStatic, isVoid, args);
     } else {
-
+        if (LOG) {
+            jstring toString_ = (jstring) invokeMethod(env, obj, "toString", "()Ljava/lang/String;", false, false);
+            const char *toString = env->GetStringUTFChars(toString_, 0);
+            LOGI("not found method %s in object %s", name, toString);
+            env->ReleaseStringUTFChars(toString_, toString);
+        }
     }
     va_end(args);
     return result;

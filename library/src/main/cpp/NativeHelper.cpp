@@ -11,11 +11,6 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_cantalou_android_nativeutil_NativeHelper_test(JNIEnv *env, jclass jclazz, jobject obj, jstring name_, jstring sign_, jboolean isStatic,
                                                        jboolean isVoid, jstring value) {
-
-    LOGI("log %s", "1");
-    log(env,"log ");
-    LOGI("log %s", "3");
-
     const char *sign = sign_ != NULL ? env->GetStringUTFChars(sign_, 0) : NULL;
     jobject result = invokeMethod(env, obj, env->GetStringUTFChars(name_, 0), sign, isStatic, isVoid, value);
     return result;

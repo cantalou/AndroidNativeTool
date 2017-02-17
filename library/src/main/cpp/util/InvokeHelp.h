@@ -2,7 +2,7 @@
 
 jmethodID findMethod(JNIEnv *env, jobjectArray methods, const char *name);
 
-jmethodID getMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic);
+jmethodID findMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic);
 
 jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic, jboolean isVoid, ...);
 

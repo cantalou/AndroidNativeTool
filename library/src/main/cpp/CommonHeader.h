@@ -1,4 +1,5 @@
 #include <jni.h>
+#include <string.h>
 #include <Android/log.h>
 
 #ifdef __cplusplus

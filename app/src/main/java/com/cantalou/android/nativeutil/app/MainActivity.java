@@ -7,6 +7,8 @@ import android.widget.TextView;
 
 import com.cantalou.android.nativeutil.NativeHelper;
 
+import java.lang.reflect.Method;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
 //        sb.append("\n" + NativeHelper.test(new Test(), "instanceVoidMethod", "()V", false, true, "") + voidMethod);
 //        sb.append("\n" + NativeHelper.test(Test.class, "setStaticMethod", "(Ljava/lang/String;)Ljava/lang/String;", true, false, "1"));
 //        sb.append("\n" + NativeHelper.test(new Test(), "setInstanceMethod", "(Ljava/lang/String;)Ljava/lang/String;", false, false, "2"));
+
+        for (Method m : Test.class.getDeclaredMethods()) {
+            sb.append("\n" + m.getName());
+        }
+
         textView.setText(sb.toString());
     }
 
@@ -71,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void text(View view) throws NoSuchMethodException {
+
     }
 
 
