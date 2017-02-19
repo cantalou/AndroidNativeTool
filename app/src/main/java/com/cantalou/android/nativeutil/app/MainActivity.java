@@ -12,11 +12,23 @@ import java.lang.reflect.Method;
 
 public class MainActivity extends AppCompatActivity {
 
+
+    // Used to load the 'NativeHelper' library on application startup.
+    static {
+        System.loadLibrary("NativeHelper");
+    }
+
+
     private TextView textView;
 
     static String voidMethod = "";
 
+
     static class Test {
+
+        static String staticField = "get staticField ok";
+
+        String instanceField = "get instanceField ok";
 
         private static String staticMethod() {
             return "staticMethod ok";
@@ -51,30 +63,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textView = (TextView) findViewById(R.id.sample_text);
         StringBuilder sb = new StringBuilder();
-//        sb.append("\n" + NativeHelper.test(Test.class, "staticMethod", "()Ljava/lang/String;", true, false, ""));
-//        sb.append("\n" + NativeHelper.test(Test.class, "staticVoidMethod", "()V", true, true, "") + voidMethod);
-//        sb.append("\n" + NativeHelper.test(new Test(), "instanceMethod", "()Ljava/lang/String;", false, false, ""));
-//        sb.append("\n" + NativeHelper.test(new Test(), "instanceVoidMethod", "()V", false, true, "") + voidMethod);
-//        sb.append("\n" + NativeHelper.test(Test.class, "setStaticMethod", "(Ljava/lang/String;)Ljava/lang/String;", true, false, "1"));
-//        sb.append("\n" + NativeHelper.test(new Test(), "setInstanceMethod", "(Ljava/lang/String;)Ljava/lang/String;", false, false, "2"));
 
-        sb.append("\n" + NativeHelper.test(Test.class, "staticMethod", null, true, false, ""));
-//        sb.append("\n" + NativeHelper.test(Test.class, "staticVoidMethod", "()V", true, true, "") + voidMethod);
-//        sb.append("\n" + NativeHelper.test(new Test(), "instanceMethod", "()Ljava/lang/String;", false, false, ""));
-//        sb.append("\n" + NativeHelper.test(new Test(), "instanceVoidMethod", "()V", false, true, "") + voidMethod);
-//        sb.append("\n" + NativeHelper.test(Test.class, "setStaticMethod", "(Ljava/lang/String;)Ljava/lang/String;", true, false, "1"));
-//        sb.append("\n" + NativeHelper.test(new Test(), "setInstanceMethod", "(Ljava/lang/String;)Ljava/lang/String;", false, false, "2"));
+        //NativeHelper.setValue(Test.class, "staticField", "Ljava/lang/String;", true, "set staticField ok");
+        //sb.append("\n" + NativeHelper.getValue(Test.class, "staticField", "Ljava/lang/String;", true));
 
-        for (Method m : Test.class.getDeclaredMethods()) {
-            sb.append("\n" + m.getName());
-        }
+        Test test = new Test();
+        NativeHelper.setValue(test, "instanceField", "Ljava/lang/String;", false,"set instanceField ok");
+        //sb.append("\n" + NativeHelper.getValue(test, "instanceField", "Ljava/lang/String;", false));
 
         textView.setText(sb.toString());
-    }
-
-    // Used to load the 'NativeHelper' library on application startup.
-    static {
-        System.loadLibrary("NativeHelper");
     }
 
     public void text(View view) throws NoSuchMethodException {

@@ -10,4 +10,17 @@ jobject invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isVo
 
 jobject invokeMethodV(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isStatic, jboolean isVoid, va_list args);
 
+jfieldID findField(JNIEnv *env,jobjectArray fields, const char *name);
+
+jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic);
+
+jobject get(JNIEnv *env, jobject obj, const char *name, const char *sign , jboolean isStatic);
+
+jobject get(JNIEnv *env, jobject obj, jfieldID , jboolean isStatic);
+
+void set(JNIEnv *env, jobject obj, const char *name, const char *sign , jboolean isStatic, jobject value);
+
+void set(JNIEnv *env, jobject obj, jfieldID , jboolean isStatic, jobject value);
+
+
 

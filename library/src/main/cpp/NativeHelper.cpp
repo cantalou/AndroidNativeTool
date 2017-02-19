@@ -1,20 +1,14 @@
 #include <jni.h>
 #include <string.h>
 #include <string>
-#include "util/InvokeHelp.h"
 #include "util/MD5.h"
-#include "util/Log.h"
+#include "util/InvokeHelp.h"
 
 
+#ifdef __cplusplus
 extern "C"
-
-JNIEXPORT jobject JNICALL
-Java_com_cantalou_android_nativeutil_NativeHelper_test(JNIEnv *env, jclass jclazz, jobject obj, jstring name_, jstring sign_, jboolean isStatic,
-                                                       jboolean isVoid, jstring value) {
-    const char *sign = sign_ != NULL ? env->GetStringUTFChars(sign_, 0) : NULL;
-    jobject result = invokeMethod(env, obj, env->GetStringUTFChars(name_, 0), sign, isStatic, isVoid, value);
-    return result;
-}
+{
+#endif
 
 /**
  * 生成MD5摘要
@@ -41,3 +35,37 @@ Java_com_cantalou_android_nativeutil_NativeHelper_MD5(JNIEnv *env, jclass jclazz
     }
     return env->NewStringUTF(destination);
 }
+
+JNIEXPORT void JNICALL
+Java_com_cantalou_android_nativeutil_NativeHelper_checkSign(JNIEnv *env, jclass type, jobject context) {
+
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_cantalou_android_nativeutil_NativeHelper_getValue(JNIEnv *env, jclass type, jobject obj, jstring name_, jstring sign_, jboolean isStatic) {
+    const char *name = env->GetStringUTFChars(name_, 0);
+    const char *sign = env->GetStringUTFChars(sign_, 0);
+
+    jobject result = get(env, obj, name, sign, isStatic);
+
+    env->ReleaseStringUTFChars(name_, name);
+    env->ReleaseStringUTFChars(sign_, sign);
+    return result;
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_cantalou_android_nativeutil_NativeHelper_setValue(JNIEnv *env, jclass type, jobject obj, jstring name_, jstring sign_, jboolean isStatic,
+                                                           jobject value) {
+    const char *name = env->GetStringUTFChars(name_, 0);
+    const char *sign = env->GetStringUTFChars(sign_, 0);
+
+    //set(env, obj, name, sign, isStatic, value);
+    //LOGI("Java_com_cantalou_android_nativeutil_NativeHelper_setValue name:%s,sifn:%s", name, sign);
+
+    env->ReleaseStringUTFChars(name_, name);
+    env->ReleaseStringUTFChars(sign_, sign);
+}
+
+#ifdef __cplusplus
+}
+#endif
