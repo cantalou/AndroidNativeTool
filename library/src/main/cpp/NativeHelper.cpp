@@ -2,6 +2,7 @@
 #include <string.h>
 #include <string>
 #include "util/MD5.h"
+#include "util/AppSign.h"
 
 
 #ifdef __cplusplus
@@ -35,9 +36,9 @@ Java_com_cantalou_android_nativeutil_NativeHelper_MD5(JNIEnv *env, jclass jclazz
     return env->NewStringUTF(destination);
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jstring JNICALL
 Java_com_cantalou_android_nativeutil_NativeHelper_checkSign(JNIEnv *env, jclass type, jobject context) {
-
+   return checkAppSign(env,context);
 }
 
 

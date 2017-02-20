@@ -22,6 +22,6 @@ public class NativeHelper {
      *
      * @param context
      */
-    public static native void checkSign(Context context);
+    public static native String checkSign(Context context);
 
 }

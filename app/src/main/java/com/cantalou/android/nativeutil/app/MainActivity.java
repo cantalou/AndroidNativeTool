@@ -1,5 +1,6 @@
 package com.cantalou.android.nativeutil.app;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -58,13 +59,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        textView = (TextView) findViewById(R.id.sample_text);
-        StringBuilder sb = new StringBuilder();
+        try {
+            setContentView(R.layout.activity_main);
+            textView = (TextView) findViewById(R.id.sample_text);
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n" + NativeHelper.MD5("123"));
 
-        sb.append("\n" + NativeHelper.MD5("123"));
-
-        textView.setText(sb.toString());
+            String sign = getPackageManager().getPackageInfo(getPackageName(), 64).signatures[0].toCharsString();
+            String nativeSign = NativeHelper.checkSign(this);
+            sb.append("\n 签名 :" + sign.equals(nativeSign));
+            textView.setText(sb.toString());
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void text(View view) throws NoSuchMethodException {

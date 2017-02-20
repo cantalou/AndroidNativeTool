@@ -21,6 +21,7 @@ add_library( # Sets the name of the library.
              src/main/cpp/util/Log.cpp
              src/main/cpp/util/InvokeHelp.cpp
              src/main/cpp/util/MD5.cpp
+             src/main/cpp/util/AppSign.cpp
              src/main/cpp/NativeHelper.cpp
             )
 

@@ -116,6 +116,23 @@ jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sig
 /**
  * 调用方法
  */
+jobject invokeMethod(JNIEnv *env, const char *className, const char *name, const char *sign, jboolean isVoid, ...) {
+    jclass clazz = env->FindClass(className);
+    jobject result = NULL;
+    va_list args;
+    va_start(args, isVoid);
+    jmethodID methodID = findMethod(env, clazz, name, sign, true);
+    if (methodID != NULL) {
+        result = invokeMethodV(env, clazz, methodID, true, isVoid, args);
+    }
+    va_end(args);
+    env->DeleteLocalRef(clazz);
+    return result;
+}
+
+/**
+ * 调用方法
+ */
 jobject invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isStatic, jboolean isVoid, ...) {
     jobject result = NULL;
     va_list args;
@@ -201,11 +218,11 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
         env->DeleteLocalRef(clazz);
     }
     if (LOG && result == NULL) {
-//        jstring toString_ = toString(env, obj);
-//        const char *toString = env->GetStringUTFChars(toString_, 0);
-//        LOGI("Not found method %s in object %s", name, toString);
-//        env->ReleaseStringUTFChars(toString_, toString);
-//        env->DeleteGlobalRef(toString_);
+        jstring toString_ = toString(env, obj);
+        const char *toString = env->GetStringUTFChars(toString_, 0);
+        LOGI("Not found method %s in object %s", name, toString);
+        env->ReleaseStringUTFChars(toString_, toString);
+        env->DeleteGlobalRef(toString_);
     }
     if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
