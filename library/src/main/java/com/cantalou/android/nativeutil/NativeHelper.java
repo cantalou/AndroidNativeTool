@@ -24,9 +24,4 @@ public class NativeHelper {
      */
     public static native void checkSign(Context context);
 
-    public static native Object getValue(Object obj, String name, String sign, boolean isStatic);
-
-    public static native Object setValue(Object obj, String name, String sign, boolean isStatic, Object value);
-
-
 }

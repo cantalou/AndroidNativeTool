@@ -7,8 +7,6 @@ import android.widget.TextView;
 
 import com.cantalou.android.nativeutil.NativeHelper;
 
-import java.lang.reflect.Method;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,12 +62,7 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView) findViewById(R.id.sample_text);
         StringBuilder sb = new StringBuilder();
 
-        //NativeHelper.setValue(Test.class, "staticField", "Ljava/lang/String;", true, "set staticField ok");
-        //sb.append("\n" + NativeHelper.getValue(Test.class, "staticField", "Ljava/lang/String;", true));
-
-        Test test = new Test();
-        NativeHelper.setValue(test, "instanceField", "Ljava/lang/String;", false,"set instanceField ok");
-        //sb.append("\n" + NativeHelper.getValue(test, "instanceField", "Ljava/lang/String;", false));
+        sb.append("\n" + NativeHelper.MD5("123"));
 
         textView.setText(sb.toString());
     }
