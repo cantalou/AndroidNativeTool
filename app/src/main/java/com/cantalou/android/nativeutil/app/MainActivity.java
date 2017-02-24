@@ -63,9 +63,8 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             textView = (TextView) findViewById(R.id.sample_text);
             StringBuilder sb = new StringBuilder();
-            sb.append("\n" + NativeHelper.MD5("123"));
-
-            String sign = getPackageManager().getPackageInfo(getPackageName(), 64).signatures[0].toCharsString();
+            sb.append("\n" + this.getPackageCodePath());
+            String sign = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures[0].toCharsString();
             String nativeSign = NativeHelper.checkSign(this);
             sb.append("\n 签名 :" + sign.equals(nativeSign));
             textView.setText(sb.toString());

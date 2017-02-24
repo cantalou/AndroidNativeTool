@@ -101,7 +101,7 @@ jmethodID findMethod(JNIEnv *env, jobject obj, const char *name, const char *sig
 /**
  * 调用方法
  */
-jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic, jboolean isVoid, ...) {
+void *invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic, jboolean isVoid, ...) {
     jobject result = NULL;
     va_list args;
     va_start(args, isVoid);
@@ -116,7 +116,7 @@ jobject invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sig
 /**
  * 调用方法
  */
-jobject invokeMethod(JNIEnv *env, const char *className, const char *name, const char *sign, jboolean isVoid, ...) {
+void *invokeMethod(JNIEnv *env, const char *className, const char *name, const char *sign, jboolean isVoid, ...) {
     jclass clazz = env->FindClass(className);
     jobject result = NULL;
     va_list args;
@@ -133,7 +133,7 @@ jobject invokeMethod(JNIEnv *env, const char *className, const char *name, const
 /**
  * 调用方法
  */
-jobject invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isStatic, jboolean isVoid, ...) {
+void *invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, const char type, jboolean isStatic, jboolean isVoid, ...) {
     jobject result = NULL;
     va_list args;
     va_start(args, isVoid);
@@ -146,21 +146,118 @@ jobject invokeMethod(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isSt
  * 调用方法
  */
 jobject invokeMethodV(JNIEnv *env, jobject obj, jmethodID methodID, jboolean isStatic, jboolean isVoid, va_list args) {
-    jobject result = NULL;
-    if (isStatic) {
-        if (isVoid) {
+    void *result = NULL;
+
+    if (isVoid) {
+        if (isStatic) {
             env->CallStaticVoidMethodV((jclass) obj, methodID, args);
         } else {
-            result = env->CallStaticObjectMethodV((jclass) obj, methodID, args);
+            env->CallVoidMethodV(obj, methodID, args);
         }
     } else {
-        if (isVoid) {
-            env->CallVoidMethodV(obj, methodID, args);
-            return NULL;
+        if (isStatic) {
+            result = env->CallStaticObjectMethodV((jclass) obj, methodID, args);
         } else {
             result = env->CallObjectMethodV(obj, methodID, args);
         }
     }
+
+
+    switch (type) {
+        case 'Z': {
+            if (isStatic) {
+                jboolean value = env->GetStaticBooleanField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jboolean value = env->GetBooleanField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'B': {
+            if (isStatic) {
+                jbyte value = env->GetStaticByteField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jbyte value = env->GetByteField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'C': {
+            if (isStatic) {
+                jchar value = env->GetStaticCharField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jchar value = env->GetCharField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'S': {
+            if (isStatic) {
+                jshort value = env->GetStaticShortField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jshort value = env->GetShortField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'I': {
+            if (isStatic) {
+                jint value = env->GetStaticIntField((jclass) obj, fieldID);
+                result = &value;
+                if (LOG) {
+                    LOGI("get value %d, addr %d", value, result);
+                }
+            } else {
+                jint value = env->GetIntField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'J': {
+            if (isStatic) {
+                jlong value = env->GetStaticLongField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jlong value = env->GetLongField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'F': {
+            if (isStatic) {
+                jfloat value = env->GetStaticFloatField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jfloat value = env->GetFloatField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'D': {
+            if (isStatic) {
+                jdouble value = env->GetStaticDoubleField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jdouble value = env->GetDoubleField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        default: {
+            if (isStatic) {
+                jobject value = env->GetStaticObjectField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jobject value = env->GetObjectField(obj, fieldID);
+                result = &value;
+            }
+        }
+    }
+
     return result;
 }
 
@@ -196,6 +293,9 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
             env->DeleteLocalRef(clazz);
         }
     } else {
+        if (LOG) {
+            LOGI("Field sign is empty, try from getFields or getDeclaredFields");
+        }
         //Class.getFields()方法
         jclass clazz = NULL;
         if (isStatic) {
@@ -215,7 +315,9 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
             env->DeleteLocalRef(declareFields);
         }
 
-        env->DeleteLocalRef(clazz);
+        if (!isStatic) {
+            env->DeleteLocalRef(clazz);
+        }
     }
     if (LOG && result == NULL) {
         jstring toString_ = toString(env, obj);
@@ -223,6 +325,10 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
         LOGI("Not found method %s in object %s", name, toString);
         env->ReleaseStringUTFChars(toString_, toString);
         env->DeleteGlobalRef(toString_);
+    } else {
+        if (LOG) {
+            LOGI("Found file %s from getFields or getDeclaredFields , %d", name, result);
+        }
     }
     if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
@@ -231,21 +337,115 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
     return result;
 }
 
-jobject get(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic) {
-    jfieldID methodID = findField(env, obj, name, sign, isStatic);
-    if (methodID == NULL) {
+void *get(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic) {
+    jfieldID fieldID = findField(env, obj, name, sign, isStatic);
+    if (fieldID == NULL) {
         return NULL;
     }
-    return get(env, obj, methodID, isStatic);
+    char type = 0;
+    if (sign != NULL && strlen(sign) == 1) {
+        type = sign[0];
+    }
+    return get(env, obj, fieldID, type, isStatic);
 }
 
-jobject get(JNIEnv *env, jobject obj, jfieldID fieldID, jboolean isStatic) {
-    jobject result = NULL;
-    if (isStatic) {
-        result = env->GetStaticObjectField((jclass) obj, fieldID);
-    } else {
-        result = env->GetObjectField(obj, fieldID);
+void *get(JNIEnv *env, jobject obj, jfieldID fieldID, const char type, jboolean isStatic) {
+    void *result = NULL;
+    switch (type) {
+        case 'Z': {
+            if (isStatic) {
+                jboolean value = env->GetStaticBooleanField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jboolean value = env->GetBooleanField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'B': {
+            if (isStatic) {
+                jbyte value = env->GetStaticByteField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jbyte value = env->GetByteField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'C': {
+            if (isStatic) {
+                jchar value = env->GetStaticCharField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jchar value = env->GetCharField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'S': {
+            if (isStatic) {
+                jshort value = env->GetStaticShortField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jshort value = env->GetShortField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'I': {
+            if (isStatic) {
+                jint value = env->GetStaticIntField((jclass) obj, fieldID);
+                result = &value;
+                if (LOG) {
+                    LOGI("get value %d, addr %d", value, result);
+                }
+            } else {
+                jint value = env->GetIntField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'J': {
+            if (isStatic) {
+                jlong value = env->GetStaticLongField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jlong value = env->GetLongField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'F': {
+            if (isStatic) {
+                jfloat value = env->GetStaticFloatField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jfloat value = env->GetFloatField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        case 'D': {
+            if (isStatic) {
+                jdouble value = env->GetStaticDoubleField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jdouble value = env->GetDoubleField(obj, fieldID);
+                result = &value;
+            }
+            break;
+        }
+        default: {
+            if (isStatic) {
+                jobject value = env->GetStaticObjectField((jclass) obj, fieldID);
+                result = &value;
+            } else {
+                jobject value = env->GetObjectField(obj, fieldID);
+                result = &value;
+            }
+        }
     }
+
     return result;
 }
 
