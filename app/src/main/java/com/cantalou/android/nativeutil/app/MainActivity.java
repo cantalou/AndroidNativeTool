@@ -1,12 +1,9 @@
 package com.cantalou.android.nativeutil.app;
 
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
-
-import com.cantalou.android.nativeutil.NativeHelper;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -54,6 +51,42 @@ public class MainActivity extends AppCompatActivity {
         private String setInstanceMethod(String value) {
             return "instanceMethod ok " + value;
         }
+
+        public boolean Z() {
+            return false;
+        }
+
+        public byte B() {
+            return 0;
+        }
+
+        public char C() {
+            return 0;
+        }
+
+        public short S() {
+            return 0;
+        }
+
+        public int I() {
+            return 0;
+        }
+
+        public long J() {
+            return 0;
+        }
+
+        public float F() {
+            return 0;
+        }
+
+        public double D() {
+            return 0;
+        }
+
+        public boolean[] ZA() {
+            return new boolean[]{false};
+        }
     }
 
     @Override
@@ -63,12 +96,19 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             textView = (TextView) findViewById(R.id.sample_text);
             StringBuilder sb = new StringBuilder();
-            sb.append("\n" + this.getPackageCodePath());
-            String sign = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures[0].toCharsString();
-            String nativeSign = NativeHelper.checkSign(this);
-            sb.append("\n 签名 :" + sign.equals(nativeSign));
+            Class clazz = Test.class;
+            sb.append("\n 返回值类型 :" + clazz.getMethod("Z").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("B").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("C").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("S").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("I").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("J").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("F").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("D").getReturnType());
+            sb.append("\n 返回值类型 :" + clazz.getMethod("ZA").getReturnType());
+
             textView.setText(sb.toString());
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

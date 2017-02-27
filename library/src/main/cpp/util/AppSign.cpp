@@ -23,7 +23,7 @@ jobject getPackageManager(JNIEnv *env, jobject context) {
     }
 
     //构造android.app.ApplicationPackageManager对象
-    jobject iPackageManager = invokeMethod(env, activityThreadClass, "getPackageManager", "()Landroid/content/pm/IPackageManager;", true, false);
+    jobject iPackageManager = *(jobject*)invokeMethod(env, activityThreadClass, "getPackageManager", "()Landroid/content/pm/IPackageManager;", true, false);
     jclass packageManagerClass = env->FindClass("android/app/ApplicationPackageManager");
     jmethodID constructorMethodID = env->GetMethodID(packageManagerClass, "<init>", "(Landroid/app/ContextImpl;Landroid/content/pm/IPackageManager;)V");
     packageManager = env->NewObject(packageManagerClass, constructorMethodID, context, iPackageManager);
@@ -55,7 +55,7 @@ jobject getPackageInfoFromPM(JNIEnv *env, jobject context) {
     jobject packageInfo = NULL;
     jobject packageManager = getPackageManager(env, context);
     jstring packageName = env->NewStringUTF(PACKAGE_NAME);
-    packageInfo = invokeMethod(env, packageManager, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", false, false,
+    packageInfo = *(jobject*)invokeMethod(env, packageManager, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", false, false,
                                packageName, 64);
     env->DeleteLocalRef(packageName);
     env->DeleteLocalRef(packageManager);
@@ -105,7 +105,7 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
 
     jobject pkg = NULL;
     if (sdkInt >= 21) {
-        pkg = invokeMethod(env, packageParser, "parsePackage", "(Ljava/io/File;I)Landroid/content/pm/PackageParser$Package", false, false, apkFile, 64);
+        pkg = *(jobject*)invokeMethod(env, packageParser, "parsePackage", "(Ljava/io/File;I)Landroid/content/pm/PackageParser$Package", false, false, apkFile, 64);
         //packageParser.collectCertificates(pkg, 0);
         invokeMethod(env, packageParser, "collectCertificates", "(Landroid/content/pm/PackageParser$Package;I)V", false, false, pkg, 64);
     } else {
@@ -116,7 +116,7 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
         invokeMethod(env, displayMetrics, "setToDefaults", "()V", false, true);
 
         //PackageParser.Package pkg = packageParser.parsePackage(sourceFile, archiveFilePath, metrics, 0);
-        pkg = invokeMethod(env, packageParser, "parsePackage",
+        pkg = *(jobject*)invokeMethod(env, packageParser, "parsePackage",
                            "(Ljava/io/File;Ljava/lang/String;Landroid/util/DisplayMetrics;I)Landroid/content/pm/PackageParser$Package;", false, false, apkFile,
                            apkFilePath, displayMetrics, 64);
         env->DeleteLocalRef(displayMetrics);
