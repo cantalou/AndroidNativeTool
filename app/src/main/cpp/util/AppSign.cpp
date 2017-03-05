@@ -92,12 +92,9 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     jmethodID fileConstructorMethodID = env->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
     jobject apkFile = env->NewObject(fileClass, fileConstructorMethodID, apkFilePath);
 
-    //new PackageParser(apkFilePath);
-    jclass packageParserClass = *(jclass *) invokeMethod(env, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false,
-                                                         env->NewStringUTF("android.content.pm.PackageParser"));
+    jclass packageParserClass= env->FindClass("android/content/pm/PackageParser");
     jmethodID packageParserConstructorMethodID = env->GetMethodID(packageParserClass, "<init>", "(Ljava/lang/String;)V");
     jobject packageParser = env->NewObject(packageParserClass, packageParserConstructorMethodID, apkFilePath);
-
 
     jclass buildClass = env->FindClass("android/os/Build$VERSION");
     int sdkInt = *(int *) get(env, buildClass, "SDK_INT", "I", true);
@@ -134,8 +131,8 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     jclass packageInfoClass = env->FindClass("android/content/pm/PackageInfo");
     jmethodID packageInfoConstructorMethodID = env->GetMethodID(packageInfoClass, "<init>", "()V");
     result = env->NewObject(packageInfoClass, packageInfoConstructorMethodID);
-    jobject signature = *(jobject *) get(env, pkg, "signatures", "[android/content/pm/signature;", false);
-    set(env, result, "signatures", "[android/content/pm/signature;", false, signature);
+    jobject signature = *(jobject *) get(env, pkg, "mSignatures", NULL, false);
+    set(env, result, "mSignatures", NULL, false, signature);
 
     env->DeleteLocalRef(signature);
     env->DeleteLocalRef(packageInfoClass);
@@ -155,7 +152,7 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
 
 jstring getAppSignature(JNIEnv *env, jobject context) {
     jstring sigStr = NULL;
-    jobject packageInfo = getPackageInfoFromPM(env, context);
+    jobject packageInfo = getPackageInfoFromFile(env, context);
     jobjectArray signatures = *(jobjectArray *) get(env, packageInfo, "signatures", "[Landroid/content/pm/Signature;", false);
     jobject signature = env->GetObjectArrayElement(signatures, 0);
     sigStr = *(jstring *) invokeMethod(env, signature, "toCharsString", "()Ljava/lang/String;", false, false);

@@ -1,9 +1,12 @@
 package com.cantalou.android.nativeutil.app;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
+
+import com.cantalou.android.nativeutil.NativeHelper;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -87,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
         public boolean[] ZA() {
             return new boolean[]{false};
         }
+
+        public void V() {
+
+        }
     }
 
     @Override
@@ -96,17 +103,8 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             textView = (TextView) findViewById(R.id.sample_text);
             StringBuilder sb = new StringBuilder();
-            Class clazz = Test.class;
-            sb.append("\n 返回值类型 :" + clazz.getMethod("Z").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("B").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("C").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("S").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("I").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("J").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("F").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("D").getReturnType());
-            sb.append("\n 返回值类型 :" + clazz.getMethod("ZA").getReturnType());
-
+            String sign = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures[0].toCharsString();
+            sb.append("\n 返回值类型 :" + NativeHelper.checkSign(getBaseContext()).equals(sign));
             textView.setText(sb.toString());
         } catch (Exception e) {
             e.printStackTrace();

@@ -9,6 +9,12 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-frtti -fexceptions"
+                abiFilters 'x86', 'armeabi-v7a'
+            }
+        }
     }
     buildTypes {
         release {
@@ -19,11 +25,16 @@ android {
             jniDebuggable true
         }
     }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':library')
+    //compile project(':library')
     compile 'com.android.support:appcompat-v7:25.0.1'
     provided 'com.android.tools.build:gradle-core:2.2.3'
 }
