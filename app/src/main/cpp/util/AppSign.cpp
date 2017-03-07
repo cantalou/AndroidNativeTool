@@ -92,7 +92,7 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     jmethodID fileConstructorMethodID = env->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
     jobject apkFile = env->NewObject(fileClass, fileConstructorMethodID, apkFilePath);
 
-    jclass packageParserClass= env->FindClass("android/content/pm/PackageParser");
+    jclass packageParserClass = env->FindClass("android/content/pm/PackageParser");
     jmethodID packageParserConstructorMethodID = env->GetMethodID(packageParserClass, "<init>", "(Ljava/lang/String;)V");
     jobject packageParser = env->NewObject(packageParserClass, packageParserConstructorMethodID, apkFilePath);
 
@@ -131,8 +131,11 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     jclass packageInfoClass = env->FindClass("android/content/pm/PackageInfo");
     jmethodID packageInfoConstructorMethodID = env->GetMethodID(packageInfoClass, "<init>", "()V");
     result = env->NewObject(packageInfoClass, packageInfoConstructorMethodID);
-    jobject signature = *(jobject *) get(env, pkg, "mSignatures", NULL, false);
-    set(env, result, "mSignatures", NULL, false, signature);
+    jobject signature = *(jobject *) get(env, pkg, "mSignatures", "[Landroid/content/pm/Signature;", false);
+    if (LOG) {
+        LOGI("find signature %d", signature);
+    }
+    set(env, result, "signatures1", "[Landroid/content/pm/Signature;", false, signature);
 
     env->DeleteLocalRef(signature);
     env->DeleteLocalRef(packageInfoClass);

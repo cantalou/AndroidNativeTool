@@ -21,12 +21,10 @@ jboolean stringEquals(JNIEnv *env, jstring str1, const char *str2) {
 jstring toString(JNIEnv *env, jobject obj) {
     jstring result = NULL;
     jclass clazz = env->FindClass("java/lang/Class");
-    if (env->IsInstanceOf(obj, clazz)) {
-        jmethodID methodID = env->GetMethodID(clazz, "toString", "()Ljava/lang/String;");
-        result = (jstring) env->CallObjectMethod(obj, methodID);
-    } else {
-        result = (jstring) invokeMethod(env, obj, "toString", "()Ljava/lang/String;", false, false);
+    if (!env->IsInstanceOf(obj, clazz)) {
+        obj = *(jobject *) invokeMethod(env, obj, "getClass", "()Ljava/lang/Class;", false, false);
     }
+    result = *(jstring *) invokeMethod(env, obj, "toString", "()Ljava/lang/String;", false, false);
     env->DeleteGlobalRef(clazz);
     return result;
 }
@@ -101,37 +99,51 @@ jmethodID findMethod(JNIEnv *env, jobjectArray methods, const char *name) {
 }
 
 jmethodID findMethod(JNIEnv *env, jobject obj, const char *name, const char *sign, jboolean isStatic) {
+
     jmethodID result = NULL;
     if (sign != NULL && strlen(sign) > 0) {
         if (isStatic) {
             result = env->GetStaticMethodID((jclass) obj, name, sign);
         } else {
-            jclass clazz = env->GetObjectClass(obj);
-            result = env->GetMethodID(clazz, name, sign);
+            jclass objClazz = NULL;
+            jclass clazz = env->FindClass("java/lang/Class");
+            if (env->IsInstanceOf(obj, clazz)) {
+                objClazz = (jclass) obj;
+            } else {
+                objClazz = env->GetObjectClass(obj);
+            }
+            result = env->GetMethodID(objClazz, name, sign);
             env->DeleteLocalRef(clazz);
+            env->DeleteLocalRef(objClazz);
         }
     } else {
 
         //Class.getMethods()方法
-        jclass clazz = NULL;
+        jclass objClazz = NULL;
         if (isStatic) {
-            clazz = (jclass) obj;
+            objClazz = (jclass) obj;
         } else {
-            clazz = env->GetObjectClass(obj);
+            jclass clazz = env->FindClass("java/lang/Class");
+            if (env->IsInstanceOf(obj, clazz)) {
+                objClazz = (jclass) obj;
+            } else {
+                objClazz = env->GetObjectClass(obj);
+            }
+            env->DeleteLocalRef(clazz);
         }
 
-        jobjectArray publicMethods = (jobjectArray) invokeMethod(env, clazz, "getMethods", "()[Ljava/lang/reflect/Method;", false, false);
+        jobjectArray publicMethods = (jobjectArray) invokeMethod(env, objClazz, "getMethods", "()[Ljava/lang/reflect/Method;", false, false);
         result = findMethod(env, publicMethods, name);
         env->DeleteLocalRef(publicMethods);
 
         //Class.getDeclaredMethods()方法
         if (result == NULL) {
-            jobjectArray declareMethods = (jobjectArray) invokeMethod(env, clazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;", false, false);
+            jobjectArray declareMethods = (jobjectArray) invokeMethod(env, objClazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;", false, false);
             result = findMethod(env, declareMethods, name);
             env->DeleteLocalRef(declareMethods);
         }
 
-        env->DeleteLocalRef(clazz);
+        env->DeleteLocalRef(objClazz);
     }
     if (LOG && result == NULL) {
         jstring toString_ = toString(env, obj);
@@ -157,7 +169,7 @@ void *invokeMethod(JNIEnv *env, jobject obj, const char *name, const char *sign,
     jmethodID methodID = findMethod(env, obj, name, sign, isStatic);
     if (methodID != NULL) {
         char type = 'V';
-        if(!isVoid){
+        if (!isVoid) {
             type = getMethodType(env, obj, methodID, sign, isStatic);
         }
         result = invokeMethodV(env, obj, methodID, type, isStatic, args);
@@ -177,7 +189,7 @@ void *invokeMethod(JNIEnv *env, const char *className, const char *name, const c
     jmethodID methodID = findMethod(env, clazz, name, sign, true);
     if (methodID != NULL) {
         char type = 'V';
-        if(!isVoid){
+        if (!isVoid) {
             type = getMethodType(env, clazz, methodID, sign, true);
         }
         result = invokeMethodV(env, clazz, methodID, type, true, args);
@@ -343,7 +355,7 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
         }
     } else {
         if (LOG) {
-            LOGI("Field sign is empty, try from getFields or getDeclaredFields");
+            LOGI("findField sign param is empty, try from getFields or getDeclaredFields");
         }
         //Class.getFields()方法
         jclass clazz = NULL;
@@ -371,12 +383,12 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
     if (LOG && result == NULL) {
         jstring toString_ = toString(env, obj);
         const char *toString = env->GetStringUTFChars(toString_, 0);
-        LOGI("Not found method %s in object %s", name, toString);
+        LOGI("Not found field %s in object %s", name, toString);
         env->ReleaseStringUTFChars(toString_, toString);
         env->DeleteGlobalRef(toString_);
     } else {
         if (LOG) {
-            LOGI("Found file %s from getFields or getDeclaredFields , %d", name, result);
+            LOGI("Found field %s from getFields or getDeclaredFields , %d", name, result);
         }
     }
     if (env->ExceptionCheck()) {
