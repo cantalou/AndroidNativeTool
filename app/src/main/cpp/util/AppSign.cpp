@@ -68,6 +68,13 @@ jobject getPackageInfoFromPM(JNIEnv *env, jobject context) {
  */
 jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
 
+    jclass buildClass = env->FindClass("android/os/Build$VERSION");
+    int sdkInt = *(int *) get(env, buildClass, "SDK_INT", "I", true);
+    env->DeleteLocalRef(buildClass);
+    if (LOG) {
+        LOGI("Android SDK version %d", sdkInt);
+    }
+
     jobject result = NULL;
     jstring packageName = env->NewStringUTF(PACKAGE_NAME);
 
@@ -93,18 +100,14 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     jobject apkFile = env->NewObject(fileClass, fileConstructorMethodID, apkFilePath);
 
     jclass packageParserClass = env->FindClass("android/content/pm/PackageParser");
-    jmethodID packageParserConstructorMethodID = env->GetMethodID(packageParserClass, "<init>", "(Ljava/lang/String;)V");
+
+    jmethodID packageParserConstructorMethodID = env->GetMethodID(packageParserClass, "<init>", sdkInt > 19 ? "()V" :"(Ljava/lang/String;)V");
     jobject packageParser = env->NewObject(packageParserClass, packageParserConstructorMethodID, apkFilePath);
 
-    jclass buildClass = env->FindClass("android/os/Build$VERSION");
-    int sdkInt = *(int *) get(env, buildClass, "SDK_INT", "I", true);
-    if (LOG) {
-        LOGI("Android SDK version %d", sdkInt);
-    }
 
     jobject pkg = NULL;
     if (sdkInt >= 21) {
-        pkg = *(jobject *) invokeMethod(env, packageParser, "parsePackage", "(Ljava/io/File;I)Landroid/content/pm/PackageParser$Package", false, false, apkFile,
+        pkg = *(jobject *) invokeMethod(env, packageParser, "parsePackage", NULL, false, false, apkFile,
                                         64);
         //packageParser.collectCertificates(pkg, 0);
         invokeMethod(env, packageParser, "collectCertificates", "(Landroid/content/pm/PackageParser$Package;I)V", false, false, pkg, 64);
@@ -135,12 +138,11 @@ jobject getPackageInfoFromFile(JNIEnv *env, jobject context) {
     if (LOG) {
         LOGI("find signature %d", signature);
     }
-    set(env, result, "signatures1", "[Landroid/content/pm/Signature;", false, signature);
+    set(env, result, "signatures", "[Landroid/content/pm/Signature;", false, signature);
 
     env->DeleteLocalRef(signature);
     env->DeleteLocalRef(packageInfoClass);
     env->DeleteLocalRef(pkg);
-    env->DeleteLocalRef(buildClass);
     env->DeleteLocalRef(packageParser);
     env->DeleteLocalRef(packageParserClass);
     env->DeleteLocalRef(apkFile);

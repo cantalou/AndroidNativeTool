@@ -20,12 +20,10 @@ jboolean stringEquals(JNIEnv *env, jstring str1, const char *str2) {
 
 jstring toString(JNIEnv *env, jobject obj) {
     jstring result = NULL;
-    jclass clazz = env->FindClass("java/lang/Class");
-    if (!env->IsInstanceOf(obj, clazz)) {
-        obj = *(jobject *) invokeMethod(env, obj, "getClass", "()Ljava/lang/Class;", false, false);
-    }
-    result = *(jstring *) invokeMethod(env, obj, "toString", "()Ljava/lang/String;", false, false);
-    env->DeleteGlobalRef(clazz);
+    jclass clazz = env->FindClass("java/lang/Object");
+    jmethodID toString = env->GetMethodID(clazz, "toString", "()Ljava/lang/String;");
+    result = (jstring)env->CallObjectMethod(obj, toString);
+    env->DeleteLocalRef(clazz);
     return result;
 }
 
@@ -46,7 +44,8 @@ char getMethodType(JNIEnv *env, jobject obj, jmethodID methodID, const char *sig
     jclass objClass = getClass(env, obj, isStatic);
     jobject method = env->ToReflectedMethod(objClass, methodID, isStatic);
     jobject returnType = *(jobject *) invokeMethod(env, method, "getReturnType", "()Ljava/lang/Class;", false, false);
-    jstring returnTypeName = *(jstring *) invokeMethod(env, returnType, "toString", "()Ljava/lang/String;", false, false);
+
+    jstring returnTypeName = toString(env, returnType);
 
     if (stringEquals(env, returnTypeName, "boolean")) {
         type = 'Z';
@@ -73,7 +72,9 @@ char getMethodType(JNIEnv *env, jobject obj, jmethodID methodID, const char *sig
     env->DeleteLocalRef(returnTypeName);
     env->DeleteLocalRef(returnType);
     env->DeleteLocalRef(method);
-    env->DeleteLocalRef(objClass);
+    if (!isStatic) {
+        env->DeleteLocalRef(objClass);
+    }
 
     return type;
 }
@@ -86,7 +87,7 @@ jmethodID findMethod(JNIEnv *env, jobjectArray methods, const char *name) {
     jmethodID methodID = NULL;
     for (int i = 0, len = env->GetArrayLength(methods); i < len && methodID == NULL; ++i) {
         jobject method = env->GetObjectArrayElement(methods, i);
-        jstring methodName = (jstring) invokeMethod(env, method, "getName", "()Ljava/lang/String;", false, false);
+        jstring methodName = *(jstring *) invokeMethod(env, method, "getName", "()Ljava/lang/String;", false, false);
         const char *methodName_ = env->GetStringUTFChars(methodName, 0);
         if (stringEquals(name, methodName_)) {
             methodID = env->FromReflectedMethod(method);
@@ -114,36 +115,42 @@ jmethodID findMethod(JNIEnv *env, jobject obj, const char *name, const char *sig
             }
             result = env->GetMethodID(objClazz, name, sign);
             env->DeleteLocalRef(clazz);
-            env->DeleteLocalRef(objClazz);
+            if (obj != objClazz) {
+                env->DeleteLocalRef(objClazz);
+            }
         }
     } else {
 
+        jclass clazz = env->FindClass("java/lang/Class");
         //Class.getMethods()方法
         jclass objClazz = NULL;
         if (isStatic) {
             objClazz = (jclass) obj;
         } else {
-            jclass clazz = env->FindClass("java/lang/Class");
             if (env->IsInstanceOf(obj, clazz)) {
                 objClazz = (jclass) obj;
             } else {
                 objClazz = env->GetObjectClass(obj);
             }
-            env->DeleteLocalRef(clazz);
         }
 
-        jobjectArray publicMethods = (jobjectArray) invokeMethod(env, objClazz, "getMethods", "()[Ljava/lang/reflect/Method;", false, false);
+        jmethodID getMethods = env->GetMethodID(clazz, "getMethods", "()[Ljava/lang/reflect/Method;");
+        jobjectArray publicMethods = (jobjectArray) env->CallObjectMethod(objClazz, getMethods);
         result = findMethod(env, publicMethods, name);
         env->DeleteLocalRef(publicMethods);
 
         //Class.getDeclaredMethods()方法
         if (result == NULL) {
-            jobjectArray declareMethods = (jobjectArray) invokeMethod(env, objClazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;", false, false);
+            jmethodID getDeclaredMethods = env->GetMethodID(clazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+            jobjectArray declareMethods = (jobjectArray) env->CallObjectMethod(objClazz, getDeclaredMethods);
             result = findMethod(env, declareMethods, name);
             env->DeleteLocalRef(declareMethods);
         }
 
-        env->DeleteLocalRef(objClazz);
+        env->DeleteLocalRef(clazz);
+        if (objClazz != obj) {
+            env->DeleteLocalRef(objClazz);
+        }
     }
     if (LOG && result == NULL) {
         jstring toString_ = toString(env, obj);
@@ -330,7 +337,7 @@ jfieldID findField(JNIEnv *env, jobjectArray fields, const char *name) {
     jfieldID fieldID = NULL;
     for (int i = 0, len = env->GetArrayLength(fields); i < len && fieldID == NULL; ++i) {
         jobject field = env->GetObjectArrayElement(fields, i);
-        jstring fieldName = (jstring) invokeMethod(env, field, "getName", "()Ljava/lang/String;", false, false);
+        jstring fieldName = *(jstring *) invokeMethod(env, field, "getName", "()Ljava/lang/String;", false, false);
         const char *fieldName_ = env->GetStringUTFChars(fieldName, 0);
         if (stringEquals(name, fieldName_)) {
             fieldID = env->FromReflectedField(field);
@@ -365,13 +372,13 @@ jfieldID findField(JNIEnv *env, jobject obj, const char *name, const char *sign,
             clazz = env->GetObjectClass(obj);
         }
 
-        jobjectArray publicFields = (jobjectArray) invokeMethod(env, clazz, "getFields", "()[Ljava/lang/reflect/Field;", false, false);
+        jobjectArray publicFields = *(jobjectArray *) invokeMethod(env, clazz, "getFields", "()[Ljava/lang/reflect/Field;", false, false);
         result = findField(env, publicFields, name);
         env->DeleteLocalRef(publicFields);
 
         //Class.getDeclaredFields()方法
         if (result == NULL) {
-            jobjectArray declareFields = (jobjectArray) invokeMethod(env, clazz, "getDeclaredFields", "()[Ljava/lang/reflect/Field;", false, false);
+            jobjectArray declareFields = *(jobjectArray *) invokeMethod(env, clazz, "getDeclaredFields", "()[Ljava/lang/reflect/Field;", false, false);
             result = findField(env, declareFields, name);
             env->DeleteLocalRef(declareFields);
         }
